@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JITO Kanpur Pickleball League</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand-lockup">
+        <img class="league-logo" src="jkpl-logo.png" alt="JKPL logo">
+        <div>
+          <p class="eyebrow">Pickleball League</p>
+          <h1>JITO Kanpur Pickleball League</h1>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="ghost" id="exportBtn" type="button">Export JSON</button>
+        <label class="ghost import-label">
+          Import JSON
+          <input id="importFile" type="file" accept="application/json">
+        </label>
+        <button class="danger" id="resetBtn" type="button">Reset</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="scoreboard-band">
+        <div class="scoreboard-copy">
+          <p class="eyebrow">Live match control</p>
+          <h2 id="activeMatchTitle">Select a match</h2>
+          <p id="activeMatchMeta">Choose any group or knockout match to start scoring.</p>
+        </div>
+        <div class="score-panel" id="scorePanel">
+          <div class="team-score">
+            <span id="scoreTeamA">Team A</span>
+            <strong id="scoreA">0</strong>
+            <button id="pointA" type="button">Point</button>
+          </div>
+          <div class="serve-state">
+            <span id="servingBadge">Server: -</span>
+            <span id="roundBadge">Round 1</span>
+            <span id="targetBadge">Target 11</span>
+          </div>
+          <div class="team-score">
+            <span id="scoreTeamB">Team B</span>
+            <strong id="scoreB">0</strong>
+            <button id="pointB" type="button">Point</button>
+          </div>
+          <div class="scoring-controls">
+            <button id="sideOutBtn" class="ghost" type="button">Side out</button>
+            <button id="undoBtn" class="ghost" type="button">Undo</button>
+            <button id="nextRoundBtn" class="ghost" type="button">Next round</button>
+            <button id="completeMatchBtn" type="button">Complete match</button>
+          </div>
+        </div>
+      </section>
+
+      <nav class="tabs" aria-label="Views">
+        <button class="tab active" data-view="fixtures" type="button">Fixtures</button>
+        <button class="tab" data-view="standings" type="button">Standings</button>
+        <button class="tab" data-view="bracket" type="button">Knockout</button>
+        <button class="tab" data-view="teams" type="button">Teams</button>
+        <button class="tab" data-view="rules" type="button">Rules</button>
+      </nav>
+
+      <section class="view active" id="fixturesView">
+        <div class="section-heading">
+          <h2>All fixtures</h2>
+          <p>Group games are one round to 11. QF/SF are best of 3 to 7. The final is best of 3 to 11.</p>
+        </div>
+        <div class="match-grid" id="fixturesGrid"></div>
+      </section>
+
+      <section class="view" id="standingsView">
+        <div class="section-heading">
+          <h2>Group standings</h2>
+          <p>If one team wins 2 matches, they advance. If all three teams win 1 match each, the highest winning point difference advances.</p>
+        </div>
+        <div class="standings-grid" id="standingsGrid"></div>
+      </section>
+
+      <section class="view" id="bracketView">
+        <div class="section-heading">
+          <h2>Knockout bracket</h2>
+          <p>Group winners advance automatically when their group matches are complete.</p>
+        </div>
+        <div class="bracket" id="bracket"></div>
+      </section>
+
+      <section class="view" id="teamsView">
+        <div class="section-heading">
+          <h2>Teams</h2>
+          <p>Rename placeholders before the tournament starts. Saved automatically.</p>
+        </div>
+        <div class="teams-editor" id="teamsEditor"></div>
+      </section>
+
+      <section class="view" id="rulesView">
+        <div class="section-heading">
+          <h2>Scoring rules used by this app</h2>
+        </div>
+        <div class="rules-list">
+          <p>Traditional international pickleball side-out scoring is used: only the serving team scores a point.</p>
+          <p>Doubles serving starts at 0-0-2, then each team normally has server 1 and server 2 before side out.</p>
+          <p>Games must be won by 2. A match winner is recorded after enough rounds are won for the match format.</p>
+          <p>The point buttons award a rally to that team. If the receiving team wins a rally, the app changes server or side-out instead of adding a point.</p>
+        </div>
+      </section>
+    </main>
+
+    <template id="matchCardTemplate">
+      <article class="match-card">
+        <div class="match-topline">
+          <span class="match-stage"></span>
+          <span class="match-status"></span>
+        </div>
+        <h3 class="match-title"></h3>
+        <p class="match-format"></p>
+        <div class="rounds"></div>
+        <button class="select-match" type="button">Score match</button>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
