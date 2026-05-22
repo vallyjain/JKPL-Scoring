@@ -42,8 +42,10 @@ const els = {
   newTeamName: document.querySelector("#newTeamName"),
   playerOneName: document.querySelector("#playerOneName"),
   playerOneMobile: document.querySelector("#playerOneMobile"),
+  playerOneAge: document.querySelector("#playerOneAge"),
   playerTwoName: document.querySelector("#playerTwoName"),
   playerTwoMobile: document.querySelector("#playerTwoMobile"),
+  playerTwoAge: document.querySelector("#playerTwoAge"),
   exportBtn: document.querySelector("#exportBtn"),
   importFile: document.querySelector("#importFile"),
   resetBtn: document.querySelector("#resetBtn"),
@@ -180,7 +182,8 @@ function normalizeRosterTeam(team) {
     name: team.name || "Unnamed team",
     players: [0, 1].map((index) => ({
       name: team.players?.[index]?.name || "",
-      mobile: team.players?.[index]?.mobile || ""
+      mobile: team.players?.[index]?.mobile || "",
+      age: team.players?.[index]?.age || ""
     }))
   };
 }
@@ -611,14 +614,21 @@ function renderRoster() {
     card.innerHTML = `
       <div>
         <strong>${escapeHtml(team.name)}</strong>
-        <p>${escapeHtml(team.players[0].name || "Player 1")} - ${escapeHtml(team.players[0].mobile || "No mobile")}</p>
-        <p>${escapeHtml(team.players[1].name || "Player 2")} - ${escapeHtml(team.players[1].mobile || "No mobile")}</p>
+        <p>${formatPlayer(team.players[0], "Player 1")}</p>
+        <p>${formatPlayer(team.players[1], "Player 2")}</p>
       </div>
       <button class="ghost remove-team" type="button">Remove</button>
     `;
     card.querySelector(".remove-team").addEventListener("click", () => removeRosterTeam(team.id));
     els.teamRoster.append(card);
   });
+}
+
+function formatPlayer(player, fallbackName) {
+  const name = player.name || fallbackName;
+  const mobile = player.mobile || "No mobile";
+  const age = player.age ? `Age ${player.age}` : "No age";
+  return `${escapeHtml(name)} - ${escapeHtml(mobile)} - ${escapeHtml(age)}`;
 }
 
 function addRosterTeam(event) {
@@ -629,16 +639,18 @@ function addRosterTeam(event) {
     players: [
       {
         name: els.playerOneName.value.trim(),
-        mobile: els.playerOneMobile.value.trim()
+        mobile: els.playerOneMobile.value.trim(),
+        age: els.playerOneAge.value.trim()
       },
       {
         name: els.playerTwoName.value.trim(),
-        mobile: els.playerTwoMobile.value.trim()
+        mobile: els.playerTwoMobile.value.trim(),
+        age: els.playerTwoAge.value.trim()
       }
     ]
   };
 
-  if (!team.name || team.players.some((player) => !player.name || !player.mobile)) return;
+  if (!team.name || team.players.some((player) => !player.name || !player.mobile || !player.age)) return;
   state.rosterTeams.push(team);
   els.teamForm.reset();
   saveAndRender();
