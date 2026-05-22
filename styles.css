@@ -23,6 +23,8 @@ body {
   background: #eef3f0;
   color: var(--ink);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 button,
@@ -40,6 +42,7 @@ button,
   font-weight: 750;
   min-height: 42px;
   padding: 0 16px;
+  touch-action: manipulation;
 }
 
 button:hover,
@@ -231,6 +234,7 @@ main {
   background: #ffffff;
   border: 1px solid var(--line);
   color: var(--ink);
+  flex: 0 0 auto;
 }
 
 .tab.active {
@@ -262,7 +266,8 @@ main {
 
 .match-grid,
 .standings-grid,
-.teams-editor {
+.teams-editor,
+.team-setup {
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -271,6 +276,9 @@ main {
 .match-card,
 .standing-card,
 .team-group,
+.team-form,
+.team-roster,
+.roster-card,
 .bracket-match,
 .rules-list {
   background: var(--panel);
@@ -333,7 +341,7 @@ main {
 }
 
 .standing-row {
-  grid-template-columns: 32px 1fr repeat(4, 42px);
+  grid-template-columns: 32px minmax(0, 1fr) repeat(4, 42px);
 }
 
 .standing-row.header {
@@ -384,12 +392,83 @@ main {
   gap: 10px;
 }
 
-.team-edit-row input {
+.team-form {
+  align-content: start;
+  display: grid;
+  gap: 12px;
+}
+
+.team-form h3,
+.team-roster h3 {
+  margin: 0;
+}
+
+.team-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.team-form label span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.team-roster {
+  align-content: start;
+  display: grid;
+  gap: 12px;
+}
+
+.roster-card {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr auto;
+}
+
+.roster-card strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.roster-card p,
+.empty-state,
+.slot-players {
+  color: var(--muted);
+  margin: 0;
+}
+
+.roster-card p {
+  font-size: 0.88rem;
+}
+
+.compact-heading {
+  margin-top: 24px;
+}
+
+.team-edit-row {
+  grid-template-columns: 48px minmax(0, 1fr);
+}
+
+.slot-players {
+  font-size: 0.8rem;
+  grid-column: 2;
+  overflow-wrap: anywhere;
+}
+
+.team-edit-row input,
+.team-edit-row select,
+.team-form input {
   border: 1px solid var(--line);
   border-radius: 8px;
   min-height: 42px;
   padding: 0 12px;
   width: 100%;
+}
+
+.team-edit-row select {
+  background: #ffffff;
 }
 
 .rules-list {
@@ -418,29 +497,290 @@ main {
     grid-template-columns: 1fr;
   }
 
+  .score-panel {
+    gap: 12px;
+  }
+
   .scoring-controls {
     grid-template-columns: 1fr 1fr;
   }
 }
 
 @media (max-width: 560px) {
-  main {
-    padding-inline: 12px;
+  button,
+  .import-label {
+    min-height: 46px;
   }
 
-  .scoreboard-band {
-    padding: 14px;
+  .app-header {
+    gap: 12px;
+    padding: 12px;
+    position: static;
   }
 
-  .scoring-controls,
+  .brand-lockup {
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .league-logo {
+    height: 58px;
+    width: 58px;
+  }
+
+  .app-header h1 {
+    font-size: 1.12rem;
+    line-height: 1.12;
+    max-width: 240px;
+  }
+
+  .eyebrow {
+    font-size: 0.68rem;
+    margin-bottom: 3px;
+  }
+
   .header-actions {
-    grid-template-columns: 1fr;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr 1fr 1fr;
     width: 100%;
   }
 
   .header-actions button,
   .import-label {
+    font-size: 0.78rem;
     justify-content: center;
+    min-height: 38px;
+    padding: 0 8px;
     width: 100%;
+  }
+
+  main {
+    padding: 12px 10px 32px;
+  }
+
+  .scoreboard-band {
+    border-radius: 0;
+    box-shadow: none;
+    gap: 12px;
+    margin-left: -10px;
+    margin-right: -10px;
+    margin-top: -12px;
+    padding: 12px 10px;
+    position: sticky;
+    top: 0;
+    z-index: 8;
+  }
+
+  .scoreboard-copy h2 {
+    font-size: 1.16rem;
+    line-height: 1.15;
+  }
+
+  .scoreboard-copy p:last-child {
+    font-size: 0.82rem;
+    line-height: 1.35;
+    margin: 5px 0 0;
+  }
+
+  .score-panel {
+    border-radius: 8px;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .team-score {
+    gap: 6px;
+    grid-template-columns: 1fr auto;
+    justify-items: start;
+    min-height: auto;
+    padding: 10px;
+  }
+
+  .team-score span {
+    align-self: end;
+    font-size: 0.82rem;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    text-align: left;
+  }
+
+  .team-score strong {
+    font-size: 3.35rem;
+    grid-row: span 2;
+    justify-self: end;
+  }
+
+  .team-score button {
+    font-size: 0.95rem;
+    min-width: 118px;
+  }
+
+  .serve-state {
+    gap: 6px;
+    grid-template-columns: 1fr;
+  }
+
+  .serve-state span {
+    font-size: 0.76rem;
+    padding: 8px;
+  }
+
+  .scoring-controls {
+    gap: 8px;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .scoring-controls button {
+    font-size: 0.82rem;
+    padding: 0 8px;
+  }
+
+  .tabs {
+    background: #eef3f0;
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin: 12px -10px 14px;
+    overflow-x: auto;
+    padding: 0 10px 4px;
+    scrollbar-width: none;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab {
+    font-size: 0.86rem;
+    min-height: 40px;
+    padding: 0 13px;
+  }
+
+  .section-heading {
+    gap: 6px;
+    margin: 10px 0 12px;
+  }
+
+  .section-heading h2 {
+    font-size: 1.25rem;
+  }
+
+  .section-heading p {
+    font-size: 0.84rem;
+    line-height: 1.4;
+  }
+
+  .match-grid,
+  .standings-grid,
+  .teams-editor,
+  .team-setup {
+    gap: 10px;
+    grid-template-columns: 1fr;
+  }
+
+  .match-card,
+  .standing-card,
+  .team-group,
+  .team-form,
+  .team-roster,
+  .roster-card,
+  .bracket-match,
+  .rules-list {
+    padding: 12px;
+  }
+
+  .match-card h3,
+  .standing-card h3,
+  .team-group h3,
+  .bracket-match h3 {
+    font-size: 1rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .match-topline {
+    align-items: flex-start;
+  }
+
+  .match-stage,
+  .match-status {
+    font-size: 0.69rem;
+  }
+
+  .match-format,
+  .round-row,
+  .rules-list p {
+    font-size: 0.84rem;
+  }
+
+  .select-match {
+    width: 100%;
+  }
+
+  .standing-card {
+    overflow-x: auto;
+  }
+
+  .standing-row {
+    gap: 8px;
+    grid-template-columns: 26px minmax(92px, 1fr) repeat(4, 35px);
+    min-width: 315px;
+  }
+
+  .standing-row.header {
+    font-size: 0.68rem;
+  }
+
+  .bracket {
+    display: flex;
+    gap: 12px;
+    margin-left: -10px;
+    margin-right: -10px;
+    overflow-x: auto;
+    padding: 0 10px 10px;
+    scroll-snap-type: x proximity;
+  }
+
+  .bracket-column {
+    flex: 0 0 78vw;
+    min-width: 250px;
+    scroll-snap-align: start;
+  }
+
+  .team-edit-row {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .team-edit-row input,
+  .team-edit-row select,
+  .team-form input {
+    min-height: 46px;
+  }
+
+  .roster-card {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+}
+
+@media (max-width: 380px) {
+  .app-header h1 {
+    font-size: 1rem;
+    max-width: 210px;
+  }
+
+  .league-logo {
+    height: 50px;
+    width: 50px;
+  }
+
+  .team-score strong {
+    font-size: 2.8rem;
+  }
+
+  .team-score button {
+    min-width: 104px;
   }
 }

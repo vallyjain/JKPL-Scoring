@@ -36,7 +36,14 @@ const els = {
   fixturesGrid: document.querySelector("#fixturesGrid"),
   standingsGrid: document.querySelector("#standingsGrid"),
   bracket: document.querySelector("#bracket"),
+  teamForm: document.querySelector("#teamForm"),
+  teamRoster: document.querySelector("#teamRoster"),
   teamsEditor: document.querySelector("#teamsEditor"),
+  newTeamName: document.querySelector("#newTeamName"),
+  playerOneName: document.querySelector("#playerOneName"),
+  playerOneMobile: document.querySelector("#playerOneMobile"),
+  playerTwoName: document.querySelector("#playerTwoName"),
+  playerTwoMobile: document.querySelector("#playerTwoMobile"),
   exportBtn: document.querySelector("#exportBtn"),
   importFile: document.querySelector("#importFile"),
   resetBtn: document.querySelector("#resetBtn"),
@@ -49,7 +56,8 @@ function createInitialState() {
     const start = groupIndex * 3 + 1;
     teams[group] = [0, 1, 2].map((offset) => ({
       id: `T${start + offset}`,
-      name: `T${start + offset}`
+      name: `T${start + offset}`,
+      teamId: null
     }));
   });
 
@@ -89,6 +97,7 @@ function createInitialState() {
   }));
 
   return {
+    rosterTeams: [],
     teams,
     matches,
     activeMatchId: matches[0].id
@@ -143,9 +152,35 @@ function save() {
 function normalizeState(savedState) {
   return {
     ...savedState,
+    rosterTeams: Array.isArray(savedState.rosterTeams) ? savedState.rosterTeams.map(normalizeRosterTeam) : [],
+    teams: normalizeGroupSlots(savedState.teams),
     matches: savedState.matches.map((match) => ({
       ...match,
       history: Array.isArray(match.history) ? match.history.slice(-20).map(normalizeHistoryItem) : []
+    }))
+  };
+}
+
+function normalizeGroupSlots(savedTeams) {
+  const initialTeams = createInitialState().teams;
+  return groups.reduce((normalized, group) => {
+    const sourceSlots = Array.isArray(savedTeams?.[group]) ? savedTeams[group] : initialTeams[group];
+    normalized[group] = [0, 1, 2].map((index) => ({
+      ...initialTeams[group][index],
+      ...sourceSlots[index],
+      teamId: sourceSlots[index]?.teamId || null
+    }));
+    return normalized;
+  }, {});
+}
+
+function normalizeRosterTeam(team) {
+  return {
+    id: team.id || createTeamId(),
+    name: team.name || "Unnamed team",
+    players: [0, 1].map((index) => ({
+      name: team.players?.[index]?.name || "",
+      mobile: team.players?.[index]?.mobile || ""
     }))
   };
 }
@@ -183,7 +218,7 @@ function rememberMatch(match) {
 }
 
 function resolveTeam(ref) {
-  if (ref.type === "team") return state.teams[ref.group][ref.index];
+  if (ref.type === "team") return getGroupSlotTeam(ref.group, ref.index);
   if (ref.type === "winner") return getGroupWinner(ref.group);
   if (ref.type === "matchWinner") {
     const match = getMatch(ref.matchId);
@@ -191,6 +226,19 @@ function resolveTeam(ref) {
     return match.winnerSide === "A" ? resolveTeam(match.teamARef) : resolveTeam(match.teamBRef);
   }
   return null;
+}
+
+function getRosterTeam(teamId) {
+  return state.rosterTeams.find((team) => team.id === teamId) || null;
+}
+
+function getGroupSlotTeam(group, index) {
+  const slot = state.teams[group][index];
+  return slot.teamId ? getRosterTeam(slot.teamId) || slot : slot;
+}
+
+function createTeamId() {
+  return `team-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function getMatch(id) {
@@ -322,8 +370,8 @@ function groupMatches(group) {
 }
 
 function calculateStandings(group) {
-  const rows = state.teams[group].map((team) => ({
-    team,
+  const rows = state.teams[group].map((slot, index) => ({
+    team: getGroupSlotTeam(group, index),
     played: 0,
     wins: 0,
     pointsFor: 0,
@@ -489,23 +537,122 @@ function renderBracket() {
 }
 
 function renderTeams() {
+  renderRoster();
   els.teamsEditor.innerHTML = "";
+  const assignedTeamIds = new Set();
+  groups.forEach((group) => {
+    state.teams[group].forEach((slot) => {
+      if (slot.teamId) assignedTeamIds.add(slot.teamId);
+    });
+  });
+
   groups.forEach((group) => {
     const card = document.createElement("article");
     card.className = "team-group";
     card.innerHTML = `<h3>Group ${group}</h3>`;
-    state.teams[group].forEach((team, index) => {
+    state.teams[group].forEach((slot, index) => {
+      const assignedTeam = getGroupSlotTeam(group, index);
       const row = document.createElement("label");
       row.className = "team-edit-row";
-      row.innerHTML = `<span>${escapeHtml(team.id)}</span><input value="${escapeHtml(team.name)}" aria-label="${escapeHtml(team.id)} name">`;
-      row.querySelector("input").addEventListener("input", (event) => {
-        state.teams[group][index].name = event.target.value.trim() || team.id;
-        saveAndRender(false);
+      const label = document.createElement("span");
+      label.textContent = slot.id;
+      const select = document.createElement("select");
+      select.setAttribute("aria-label", `${slot.id} team`);
+
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = `${slot.id} - ${slot.name}`;
+      select.append(placeholder);
+
+      state.rosterTeams.forEach((team) => {
+        const option = document.createElement("option");
+        option.value = team.id;
+        option.textContent = team.name;
+        option.selected = slot.teamId === team.id;
+        option.disabled = assignedTeamIds.has(team.id) && slot.teamId !== team.id;
+        select.append(option);
       });
+
+      select.addEventListener("change", (event) => {
+        state.teams[group][index].teamId = event.target.value || null;
+        saveAndRender();
+      });
+
+      row.append(label, select);
+      if (assignedTeam.players) {
+        const players = document.createElement("small");
+        players.className = "slot-players";
+        players.textContent = assignedTeam.players.map((player) => player.name).filter(Boolean).join(" / ");
+        row.append(players);
+      }
       card.append(row);
     });
     els.teamsEditor.append(card);
   });
+}
+
+function renderRoster() {
+  els.teamRoster.innerHTML = "";
+  const title = document.createElement("h3");
+  title.textContent = "Registered teams";
+  els.teamRoster.append(title);
+
+  if (state.rosterTeams.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "empty-state";
+    empty.textContent = "No teams added yet.";
+    els.teamRoster.append(empty);
+    return;
+  }
+
+  state.rosterTeams.forEach((team) => {
+    const card = document.createElement("article");
+    card.className = "roster-card";
+    card.innerHTML = `
+      <div>
+        <strong>${escapeHtml(team.name)}</strong>
+        <p>${escapeHtml(team.players[0].name || "Player 1")} - ${escapeHtml(team.players[0].mobile || "No mobile")}</p>
+        <p>${escapeHtml(team.players[1].name || "Player 2")} - ${escapeHtml(team.players[1].mobile || "No mobile")}</p>
+      </div>
+      <button class="ghost remove-team" type="button">Remove</button>
+    `;
+    card.querySelector(".remove-team").addEventListener("click", () => removeRosterTeam(team.id));
+    els.teamRoster.append(card);
+  });
+}
+
+function addRosterTeam(event) {
+  event.preventDefault();
+  const team = {
+    id: createTeamId(),
+    name: els.newTeamName.value.trim(),
+    players: [
+      {
+        name: els.playerOneName.value.trim(),
+        mobile: els.playerOneMobile.value.trim()
+      },
+      {
+        name: els.playerTwoName.value.trim(),
+        mobile: els.playerTwoMobile.value.trim()
+      }
+    ]
+  };
+
+  if (!team.name || team.players.some((player) => !player.name || !player.mobile)) return;
+  state.rosterTeams.push(team);
+  els.teamForm.reset();
+  saveAndRender();
+}
+
+function removeRosterTeam(teamId) {
+  if (!confirm("Remove this team from the roster and any group slot?")) return;
+  state.rosterTeams = state.rosterTeams.filter((team) => team.id !== teamId);
+  groups.forEach((group) => {
+    state.teams[group].forEach((slot) => {
+      if (slot.teamId === teamId) slot.teamId = null;
+    });
+  });
+  saveAndRender();
 }
 
 function renderTabs() {
@@ -544,7 +691,7 @@ function importState(file) {
     try {
       const imported = JSON.parse(reader.result);
       if (!imported.teams || !Array.isArray(imported.matches)) throw new Error("Invalid file");
-      state = imported;
+      state = normalizeState(imported);
       activeMatchId = state.activeMatchId || state.matches[0].id;
       saveAndRender();
     } catch {
@@ -560,6 +707,7 @@ els.sideOutBtn.addEventListener("click", sideOut);
 els.undoBtn.addEventListener("click", undo);
 els.nextRoundBtn.addEventListener("click", nextRound);
 els.completeMatchBtn.addEventListener("click", completeMatch);
+els.teamForm.addEventListener("submit", addRosterTeam);
 els.exportBtn.addEventListener("click", exportState);
 els.importFile.addEventListener("change", (event) => {
   const [file] = event.target.files;
