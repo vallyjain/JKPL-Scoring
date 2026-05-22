@@ -14,6 +14,57 @@ const formats = {
   final: { label: "Best of 3 games to 11", roundsToWin: 2, target: 11, maxRounds: 3 }
 };
 
+const sheetPlayers = [
+  ["p1", "AADI JAIN", "20", "(817) 492-2817"],
+  ["p2", "UTKARSH JAIN", "18", "(700) 799-1146"],
+  ["p3", "VATSAL JAIN", "25", "(638) 781-7223"],
+  ["p4", "DIYA JAIN", "22", "(788) 051-3512"],
+  ["p5", "MEDHANSH JAIN", "12", "(983) 910-5166"],
+  ["p6", "NAVYA JAIN", "16", "(727) 544-4444"],
+  ["p7", "MANAN KATARIA", "31", "(979) 288-6888"],
+  ["p8", "RISHABH JAIN", "28", "(63) 945-69698"],
+  ["p9", "JAY SHAH", "26", "(870) 705-6040"],
+  ["p10", "SAHIL SHAH", "20", "(937) 261-6629"],
+  ["p11", "VARUN JAIN", "16", "(752) 407-6991"],
+  ["p12", "DAKSH JAIN", "16", "(962) 140-3350"],
+  ["p13", "PRIYAM BETALA", "24", "(876) 595-3766"],
+  ["p14", "DEVANSHU JAIN", "22", "(752) 584-2111"],
+  ["p15", "DIYA SHAH", "16", "(630) 769-2980"],
+  ["p16", "MAHEK SHAH", "21", "(700) 790-6414"],
+  ["p17", "DARSHAN SHAH", "23", "(831) 815-3992"],
+  ["p18", "MANAN SHAH", "17", "(930) 517-5465"],
+  ["p19", "KUSHAL JAIN", "24", "(708) 492-2111"],
+  ["p20", "DIVYA JAIN", "27", "(708) 443-3111"],
+  ["p21", "HARSHIT JAIN", "14", "(911) 551-0299"],
+  ["p22", "PRAKHAR JAIN", "12", "(911) 551-0299"],
+  ["p23", "ANANYA JAIN", "20", "(915) 156-6650"],
+  ["p24", "ISHAN JAIN", "26", "(797) 687-1194"],
+  ["p25", "KETAN JAIN", "32", "(945) 300-3275"],
+  ["p26", "UTKARSH JAIN", "33", "(967) 306-4855"],
+  ["p27", "KRITIKA JAIN", "17", "(969) 636-5052"],
+  ["p28", "RUDRANSH JAIN", "13", "(900) 559-5188"],
+  ["p29", "RISHABH JAIN", "18", "(959) 840-0555"],
+  ["p30", "KANAV JAIN", "18", "(958) 079-7831"],
+  ["p31", "VANSH VORA", "24", "(933) 611-7058"],
+  ["p32", "ARNAV JAIN", "18", "(798) 522-6500"],
+  ["p33", "SNEHA JAIN", "30", "99560 68989"],
+  ["p34", "VRINDA JAIN", "30", "(740) 623-9119"],
+  ["p35", "DHARMIK JAIN", "22", "(909) 069-9079"],
+  ["p36", "UTKARSH JAIN", "31", "(875) 663-4830"],
+  ["p37", "AMAN JAIN", "28", "(894) 844-1133"],
+  ["p38", "ARNAV JAIN", "25", "(914) 088-7577"],
+  ["p39", "AANYA JAIN", "19", "(780) 046-9999"],
+  ["p40", "RADHIKA JAIN", "26", "(812) 397-2606"],
+  ["p41", "SAMYAK JAIN", "30", "(933) 677-1313"],
+  ["p42", "PRAKHAR JAIN", "25", "(955) 957-2727"],
+  ["p43", "AKANSHA JAIN", "25", "(914) 078-4975"],
+  ["p44", "AKARSH JAIN", "25", "(831) 866-8229"],
+  ["p45", "RISHABH JAIN", "25", "(907) 652-5252"],
+  ["p46", "NAMAN JAIN", "23", "(955) 527-4121"],
+  ["p47", "SAMANVAY JAIN", "24", "(831) 890-2545"],
+  ["p48", "BHAKTI JAIN", "19", "(910) 812-4389"]
+].map(([id, name, age, mobile]) => ({ id, name, age, mobile }));
+
 let state = loadState();
 let activeMatchId = state.activeMatchId || state.matches[0].id;
 
@@ -40,12 +91,10 @@ const els = {
   teamRoster: document.querySelector("#teamRoster"),
   teamsEditor: document.querySelector("#teamsEditor"),
   newTeamName: document.querySelector("#newTeamName"),
-  playerOneName: document.querySelector("#playerOneName"),
-  playerOneMobile: document.querySelector("#playerOneMobile"),
-  playerOneAge: document.querySelector("#playerOneAge"),
-  playerTwoName: document.querySelector("#playerTwoName"),
-  playerTwoMobile: document.querySelector("#playerTwoMobile"),
-  playerTwoAge: document.querySelector("#playerTwoAge"),
+  playerOneSearch: document.querySelector("#playerOneSearch"),
+  playerTwoSearch: document.querySelector("#playerTwoSearch"),
+  availablePlayersList: document.querySelector("#availablePlayersList"),
+  availablePlayersNote: document.querySelector("#availablePlayersNote"),
   exportBtn: document.querySelector("#exportBtn"),
   importFile: document.querySelector("#importFile"),
   resetBtn: document.querySelector("#resetBtn"),
@@ -99,6 +148,7 @@ function createInitialState() {
   }));
 
   return {
+    players: sheetPlayers,
     rosterTeams: [],
     teams,
     matches,
@@ -154,6 +204,7 @@ function save() {
 function normalizeState(savedState) {
   return {
     ...savedState,
+    players: normalizePlayers(savedState.players),
     rosterTeams: Array.isArray(savedState.rosterTeams) ? savedState.rosterTeams.map(normalizeRosterTeam) : [],
     teams: normalizeGroupSlots(savedState.teams),
     matches: savedState.matches.map((match) => ({
@@ -161,6 +212,22 @@ function normalizeState(savedState) {
       history: Array.isArray(match.history) ? match.history.slice(-20).map(normalizeHistoryItem) : []
     }))
   };
+}
+
+function normalizePlayers(savedPlayers) {
+  const playerMap = new Map(sheetPlayers.map((player) => [player.id, player]));
+  if (Array.isArray(savedPlayers)) {
+    savedPlayers.forEach((player) => {
+      if (!player?.id) return;
+      playerMap.set(player.id, {
+        id: player.id,
+        name: player.name || "",
+        age: player.age || "",
+        mobile: player.mobile || ""
+      });
+    });
+  }
+  return Array.from(playerMap.values());
 }
 
 function normalizeGroupSlots(savedTeams) {
@@ -181,6 +248,7 @@ function normalizeRosterTeam(team) {
     id: team.id || createTeamId(),
     name: team.name || "Unnamed team",
     players: [0, 1].map((index) => ({
+      id: team.players?.[index]?.id || "",
       name: team.players?.[index]?.name || "",
       mobile: team.players?.[index]?.mobile || "",
       age: team.players?.[index]?.age || ""
@@ -233,6 +301,37 @@ function resolveTeam(ref) {
 
 function getRosterTeam(teamId) {
   return state.rosterTeams.find((team) => team.id === teamId) || null;
+}
+
+function getPlayer(playerId) {
+  return state.players.find((player) => player.id === playerId) || null;
+}
+
+function getAssignedPlayerIds() {
+  const assigned = new Set();
+  state.rosterTeams.forEach((team) => {
+    team.players.forEach((player) => {
+      if (player.id) assigned.add(player.id);
+    });
+  });
+  return assigned;
+}
+
+function getAvailablePlayers() {
+  const assigned = getAssignedPlayerIds();
+  return state.players.filter((player) => !assigned.has(player.id));
+}
+
+function playerOptionLabel(player) {
+  return `${player.name} | Age ${player.age} | ${player.mobile}`;
+}
+
+function findPlayerFromInput(value) {
+  const normalized = value.trim().toLowerCase();
+  return getAvailablePlayers().find((player) => (
+    playerOptionLabel(player).toLowerCase() === normalized ||
+    `${player.name} ${player.mobile}`.toLowerCase() === normalized
+  )) || null;
 }
 
 function getGroupSlotTeam(group, index) {
@@ -541,6 +640,7 @@ function renderBracket() {
 
 function renderTeams() {
   renderRoster();
+  renderAvailablePlayers();
   els.teamsEditor.innerHTML = "";
   const assignedTeamIds = new Set();
   groups.forEach((group) => {
@@ -594,6 +694,17 @@ function renderTeams() {
   });
 }
 
+function renderAvailablePlayers() {
+  const available = getAvailablePlayers();
+  els.availablePlayersList.innerHTML = "";
+  available.forEach((player) => {
+    const option = document.createElement("option");
+    option.value = playerOptionLabel(player);
+    els.availablePlayersList.append(option);
+  });
+  els.availablePlayersNote.textContent = `${available.length} players available from Google Sheet data.`;
+}
+
 function renderRoster() {
   els.teamRoster.innerHTML = "";
   const title = document.createElement("h3");
@@ -625,32 +736,43 @@ function renderRoster() {
 }
 
 function formatPlayer(player, fallbackName) {
-  const name = player.name || fallbackName;
-  const mobile = player.mobile || "No mobile";
-  const age = player.age ? `Age ${player.age}` : "No age";
+  const resolved = player.id ? getPlayer(player.id) || player : player;
+  const name = resolved.name || fallbackName;
+  const mobile = resolved.mobile || "No mobile";
+  const age = resolved.age ? `Age ${resolved.age}` : "No age";
   return `${escapeHtml(name)} - ${escapeHtml(mobile)} - ${escapeHtml(age)}`;
 }
 
 function addRosterTeam(event) {
   event.preventDefault();
+  const playerOne = findPlayerFromInput(els.playerOneSearch.value);
+  const playerTwo = findPlayerFromInput(els.playerTwoSearch.value);
+
+  if (!playerOne || !playerTwo || playerOne.id === playerTwo.id) {
+    alert("Choose two different available players from the dropdown.");
+    return;
+  }
+
+  const teamName = els.newTeamName.value.trim() || `${playerOne.name} / ${playerTwo.name}`;
   const team = {
     id: createTeamId(),
-    name: els.newTeamName.value.trim(),
+    name: teamName,
     players: [
       {
-        name: els.playerOneName.value.trim(),
-        mobile: els.playerOneMobile.value.trim(),
-        age: els.playerOneAge.value.trim()
+        id: playerOne.id,
+        name: playerOne.name,
+        mobile: playerOne.mobile,
+        age: playerOne.age
       },
       {
-        name: els.playerTwoName.value.trim(),
-        mobile: els.playerTwoMobile.value.trim(),
-        age: els.playerTwoAge.value.trim()
+        id: playerTwo.id,
+        name: playerTwo.name,
+        mobile: playerTwo.mobile,
+        age: playerTwo.age
       }
     ]
   };
 
-  if (!team.name || team.players.some((player) => !player.name || !player.mobile || !player.age)) return;
   state.rosterTeams.push(team);
   els.teamForm.reset();
   saveAndRender();

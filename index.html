@@ -98,33 +98,19 @@
           <form class="team-form" id="teamForm">
             <h3>Add team</h3>
             <label>
-              <span>Team name</span>
-              <input id="newTeamName" type="text" placeholder="Team name" required>
+              <span>Team name optional</span>
+              <input id="newTeamName" type="text" placeholder="Leave blank to use player names">
             </label>
             <label>
-              <span>Player 1 name</span>
-              <input id="playerOneName" type="text" placeholder="Player 1 name" required>
+              <span>Player 1</span>
+              <input id="playerOneSearch" type="text" list="availablePlayersList" placeholder="Search player" required>
             </label>
             <label>
-              <span>Player 1 mobile</span>
-              <input id="playerOneMobile" type="tel" inputmode="tel" placeholder="Mobile number" required>
+              <span>Player 2</span>
+              <input id="playerTwoSearch" type="text" list="availablePlayersList" placeholder="Search player" required>
             </label>
-            <label>
-              <span>Player 1 age</span>
-              <input id="playerOneAge" type="number" inputmode="numeric" min="1" max="100" placeholder="Age" required>
-            </label>
-            <label>
-              <span>Player 2 name</span>
-              <input id="playerTwoName" type="text" placeholder="Player 2 name" required>
-            </label>
-            <label>
-              <span>Player 2 mobile</span>
-              <input id="playerTwoMobile" type="tel" inputmode="tel" placeholder="Mobile number" required>
-            </label>
-            <label>
-              <span>Player 2 age</span>
-              <input id="playerTwoAge" type="number" inputmode="numeric" min="1" max="100" placeholder="Age" required>
-            </label>
+            <datalist id="availablePlayersList"></datalist>
+            <p class="form-note" id="availablePlayersNote"></p>
             <button type="submit">Add team</button>
           </form>
           <div class="team-roster" id="teamRoster"></div>

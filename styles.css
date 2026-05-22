@@ -434,7 +434,8 @@ main {
 
 .roster-card p,
 .empty-state,
-.slot-players {
+.slot-players,
+.form-note {
   color: var(--muted);
   margin: 0;
 }
@@ -445,6 +446,10 @@ main {
 
 .compact-heading {
   margin-top: 24px;
+}
+
+.form-note {
+  font-size: 0.86rem;
 }
 
 .team-edit-row {
